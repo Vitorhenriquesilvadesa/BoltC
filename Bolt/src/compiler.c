@@ -38,6 +38,7 @@ void initCompiler(Compiler *compiler)
 {
     initTokenizer(&compiler->tokenizer);
     initParser(&compiler->parser);
+    initAssembler(&compiler->assembler, "C:/Github/CDev/BoltC/test.s");
 }
 
 void setCompilerRoot(Compiler *compiler, const char *filepath)
@@ -50,4 +51,6 @@ void compileCode(Compiler *compiler)
 {
     scanTokens(&compiler->tokenizer);
     parseTokens(&compiler->parser, &compiler->tokenizer);
+    setAssemblerAstArray(&compiler->assembler, compiler->parser.trees);
+    emitAssembly(&compiler->assembler);
 }

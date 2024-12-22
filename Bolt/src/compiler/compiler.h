@@ -3,11 +3,13 @@
 
 #include <tokenizer.h>
 #include <parsing.h>
+#include <assembling.h>
 
 typedef struct
 {
     Tokenizer tokenizer;
     Parser parser;
+    Assembler assembler;
 } Compiler;
 
 void initCompiler(Compiler *compiler);

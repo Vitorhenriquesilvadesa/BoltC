@@ -2,6 +2,7 @@
 #include <memory.h>
 #include <array.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void initParser(Parser *parser)
 {
@@ -25,12 +26,14 @@ void parseTokens(Parser *parser, Tokenizer *tokenizer)
 
     while (!isAtEndParser(parser))
     {
-        parseExpression(parser);
+        Ast *ast = parseExpression(parser);
+        appendAstArray(&parser->trees, ast);
     }
 
     for (size_t i = 0; i < parser->trees.count; i++)
     {
         printAst(parser->trees.trees[i]);
+        printf("\n");
     }
 }
 
@@ -57,23 +60,60 @@ void printAst(Ast *ast)
     switch (ast->type)
     {
     case AST_TYPE_LITERAL_EXPRESSION_NODE:
-        AstLiteralExpression *expression = (AstLiteralExpression *)ast;
+        printLiteralAst((AstLiteralExpression *)ast);
+        break;
 
-        switch (expression->value.type)
-        {
-        case TOKEN_ATTRIBUTE_TYPE_INT_LITERAL:
-            printf("Literal(%d)\n", expression->value.value.integer);
-            break;
-
-        default:
-            break;
-        }
-
+    case AST_TYPE_UNARY_EXPRESSION_NODE:
+        printUnaryAst((AstUnaryExpression *)ast);
         break;
 
     default:
         break;
     }
+}
+
+void printLiteralAst(AstLiteralExpression *ast)
+{
+    printf("Literal(");
+    switch (ast->value.type)
+    {
+    case TOKEN_ATTRIBUTE_TYPE_INT_LITERAL:
+        printf("%d)", ast->value.value.integer);
+        break;
+
+    case TOKEN_ATTRIBUTE_TYPE_FLOAT_LITERAL:
+        printf("%f)", ast->value.value.floating);
+        break;
+
+    default:
+        printf("Unknown");
+        break;
+    }
+}
+
+void printUnaryAst(AstUnaryExpression *ast)
+{
+    printf("Unary(");
+
+    switch (ast->op)
+    {
+    case TOKEN_TYPE_MINUS:
+        printf("-");
+        break;
+
+    case TOKEN_TYPE_LOGICAL_NOT:
+        printf("!");
+        break;
+
+    default:
+        break;
+    }
+
+    printf(", ");
+
+    printAst((Ast *)ast->right);
+
+    printf(")");
 }
 
 bool isAtEndParser(Parser *parser)
@@ -126,22 +166,46 @@ Token advanceParser(Parser *parser)
     return parser->tokens.tokens[parser->current];
 }
 
-void parseExpression(Parser *parser)
+Ast *parseExpression(Parser *parser)
 {
-    parseLiteralExpression(parser);
+    return parseUnaryExpression(parser);
 }
 
-void parseLiteralExpression(Parser *parser)
+Ast *parseLiteralExpression(Parser *parser)
 {
-    TokenType types[] = {TOKEN_TYPE_IDENTIFIER, TOKEN_TYPE_INT};
+    TokenType types[] = {TOKEN_TYPE_IDENTIFIER, TOKEN_TYPE_INT, TOKEN_TYPE_STRING_LITERAL};
 
-    if (matchParser(parser, types, 2))
+    if (matchParser(parser, types, 3))
     {
         Ast ast = {AST_TYPE_LITERAL_EXPRESSION_NODE};
         AstLiteralExpression *expression = ALLOCATE(AstLiteralExpression, 1);
         expression->info = ast;
         expression->value = previous(parser).attribute;
 
-        appendAstArray(&parser->trees, (Ast *)expression);
+        return (Ast *)expression;
     }
+
+    fprintf(stderr, "Error: Invalid expression.");
+    exit(EXIT_FAILURE);
+}
+
+Ast *parseUnaryExpression(Parser *parser)
+{
+    TokenType types[] = {TOKEN_TYPE_MINUS, TOKEN_TYPE_LOGICAL_NOT};
+
+    if (matchParser(parser, types, 2))
+    {
+        Token op = previous(parser);
+        Ast *right = parseUnaryExpression(parser);
+        AstUnaryExpression *expression = ALLOCATE(AstUnaryExpression, 1);
+
+        Ast ast = {AST_TYPE_UNARY_EXPRESSION_NODE};
+        expression->info = ast;
+        expression->op = op.type;
+        expression->right = right;
+
+        return (Ast *)expression;
+    }
+
+    return parseLiteralExpression(parser);
 }

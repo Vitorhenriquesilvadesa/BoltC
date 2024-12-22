@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <tokenizer.h>
 
-typedef enum
+typedef enum AstType
 {
     AST_TYPE_LITERAL_EXPRESSION_NODE,
     AST_TYPE_UNARY_EXPRESSION_NODE,
@@ -16,25 +16,25 @@ typedef enum
     AST_TYPE_CAST_EXPRESSION_NODE,
 } AstType;
 
-typedef struct
+typedef struct Ast
 {
     AstType type;
 } Ast;
 
-typedef struct
+typedef struct AstLiteralExpression
 {
     Ast info;
     TokenAttribute value;
 } AstLiteralExpression;
 
-typedef struct
+typedef struct AstUnaryExpression
 {
     Ast info;
     TokenType op;
     Ast *right;
 } AstUnaryExpression;
 
-typedef struct
+typedef struct AstBinaryExpression
 {
     Ast info;
     Ast *left;
@@ -42,7 +42,7 @@ typedef struct
     Ast *right;
 } AstBinaryExpression;
 
-typedef struct
+typedef struct AstTernaryExpression
 {
     Ast info;
     Ast *condition;
@@ -50,7 +50,7 @@ typedef struct
     Ast *elseBranch;
 } AstTernaryExpression;
 
-typedef struct
+typedef struct AstAssignmentExpression
 {
     Ast info;
     Ast *target;
@@ -58,21 +58,21 @@ typedef struct
     Ast *value;
 } AstAssignmentExpression;
 
-typedef struct
+typedef struct AstCallExpression
 {
     Ast info;
     Ast *callee;
     Token paren;
 } AstCallExpression;
 
-typedef struct
+typedef struct AstCastExpression
 {
     Ast info;
     Ast *type;
     Ast *target;
 } AstCastExpression;
 
-typedef struct
+typedef struct AstArray
 {
     size_t count;
     size_t capacity;
@@ -91,10 +91,19 @@ void initAstArray(AstArray *array);
 void parseTokens(Parser *parser, Tokenizer *tokenizer);
 void growAstArray(AstArray *array);
 void appendAstArray(AstArray *array, Ast *ast);
-void printAst(Ast *ast);
 
-void parseExpression(Parser *parser);
-void parseLiteralExpression(Parser *parser);
+void printAst(Ast *ast);
+void printLiteralAst(AstLiteralExpression *ast);
+void printUnaryAst(AstUnaryExpression *ast);
+
+Ast *parseExpression(Parser *parser);
+Ast *parseLiteralExpression(Parser *parser);
+Ast *parseUnaryExpression(Parser *parser);
+Ast *parseTermExpression(Parser *parser);
+Ast *parseFactorExpression(Parser *parser);
+Ast *parseComparisonExpression(Parser *parser);
+Ast *parseEqualityExpression(Parser *parser);
+Ast *parseTernaryExpression(Parser *parser);
 
 bool isAtEndParser(Parser *parser);
 bool checkParser(Parser *parser, TokenType type);

@@ -8,4 +8,4 @@ file(GLOB SOURCE_FILES "${SOURCE_DIR}/*.c" "${SOURCE_DIR}/*.h")
 
 add_executable(BoltC ${SOURCE_FILES})
 
-include_directories(BoltC Bolt/src/tokenizer Bolt/src/memory Bolt/src/compiler Bolt/src/parser)
+include_directories(BoltC Bolt/src/tokenizer Bolt/src/memory Bolt/src/compiler Bolt/src/parser Bolt/src/assembler)
